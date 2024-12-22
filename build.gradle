@@ -13,11 +13,6 @@ base {
 }
 
 repositories {
-	// Fzzy Config
-	maven {
-		name = "FzzyMaven"
-		url = "https://maven.fzzyhmstrs.me/"
-	}
 }
 
 loom {
@@ -40,9 +35,6 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-
-	// Fzzy Config
-	modImplementation"me.fzzyhmstrs:fzzy_config:${project.fzzy_config_version}"
 
 }
 
@@ -99,7 +91,6 @@ if (project.hasProperty('release_type')) {
 
 			relations {
 				requiredDependency 'fabric-api'
-				requiredDependency 'fzzy-config'
 			}
 
 			mainArtifact(remapJar)
@@ -129,7 +120,6 @@ if (project.hasProperty('release_type')) {
 			// The scope can be `required`, `optional`, `incompatible`, or `embedded`
 			// The type can either be `project` or `version`
 			required.project 'fabric-api'
-			required.project 'fzzy-config'
 		}
 	}
 

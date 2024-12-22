@@ -9,7 +9,7 @@
     "TheRedBrain"
   ],
   "contact": {
-    "sources": "https://github.com/TheRedBrain/food-overhaul"
+    "sources": "https://github.com/TheRedBrain/netherite-buckets"
   },
   "license": "MIT",
   "icon": "assets/netheritebuckets/icon.png",
@@ -23,18 +23,12 @@
       "com.github.theredbrain.netheritebuckets.NetheriteBucketsClient"
     ]
   },
-  "custom": {
-    "fzzy_config": [
-      "netheritebuckets"
-    ]
-  },
   "mixins": [
     "netheritebuckets.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=${loader_version}",
     "minecraft": "${minecraft_version}",
-    "fabric-api": "*",
-    "fzzy_config": ">=${fzzy_config_version}"
+    "fabric-api": "*"
   }
 }
