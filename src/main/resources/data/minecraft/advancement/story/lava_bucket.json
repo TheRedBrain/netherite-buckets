@@ -1,0 +1,33 @@
+{
+  "parent": "minecraft:nether/obtain_ancient_debris",
+  "criteria": {
+    "lava_bucket": {
+      "conditions": {
+        "items": [
+          {
+            "items": "netheritebuckets:netherite_lava_bucket"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.story.lava_bucket.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "netheritebuckets:netherite_lava_bucket"
+    },
+    "title": {
+      "translate": "advancements.story.lava_bucket.title"
+    }
+  },
+  "requirements": [
+    [
+      "lava_bucket"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

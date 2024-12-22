@@ -1,0 +1,18 @@
+{
+	"required": true,
+	"package": "com.github.theredbrain.netheritebuckets.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"BootstrapMixin",
+		"block.AbstractCauldronBlockInvoker",
+		"block.CauldronBlockMixin",
+		"block.PointedDripstoneBlockMixin",
+		"block.dispenser.DispenserBehaviorMixin",
+		"block.entity.AbstractFurnaceBlockEntityMixin",
+		"fluid.LavaFluidMixin",
+		"item.BucketItemMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
