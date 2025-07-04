@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public interface DispenserBehaviorMixin {
 
 	@Inject(method = "registerDefaults", at = @At("TAIL"))
-	private static void registerDefaults(CallbackInfo ci) {
+	private static void netheritebuckets$registerDefaults(CallbackInfo ci) {
 
 		DispenserBlock.registerBehavior(ItemRegistry.NETHERITE_LAVA_BUCKET, new ItemDispenserBehavior() {
 			private final ItemDispenserBehavior fallbackBehavior = new ItemDispenserBehavior();

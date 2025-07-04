@@ -8,7 +8,6 @@
 		"block.CauldronBlockMixin",
 		"block.PointedDripstoneBlockMixin",
 		"block.dispenser.DispenserBehaviorMixin",
-		"block.entity.AbstractFurnaceBlockEntityMixin",
 		"fluid.LavaFluidMixin",
 		"item.BucketItemMixin"
 	],

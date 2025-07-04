@@ -2,13 +2,22 @@ package com.github.theredbrain.netheritebuckets.block;
 
 import com.github.theredbrain.netheritebuckets.block.cauldron.NetheriteCauldronBehaviour;
 import com.mojang.serialization.MapCodec;
+import net.minecraft.block.AbstractCauldronBlock;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.CollisionEvent;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityCollisionHandler;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 
 public class NetheriteLavaCauldronBlock extends AbstractNetheriteCauldronBlock {
     public static final MapCodec<NetheriteLavaCauldronBlock> CODEC = createCodec(NetheriteLavaCauldronBlock::new);
+    private static final VoxelShape LAVA_SHAPE = Block.createColumnShape(12.0, 4.0, 15.0);
+    private static final VoxelShape INSIDE_COLLISION_SHAPE = VoxelShapes.union(AbstractNetheriteCauldronBlock.OUTLINE_SHAPE, LAVA_SHAPE);
 
     @Override
     public MapCodec<NetheriteLavaCauldronBlock> getCodec() {
@@ -30,10 +39,14 @@ public class NetheriteLavaCauldronBlock extends AbstractNetheriteCauldronBlock {
     }
 
     @Override
-    protected void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity) {
-        if (this.isEntityTouchingFluid(state, pos, entity)) {
-            entity.setOnFireFromLava();
-        }
+    protected VoxelShape getInsideCollisionShape(BlockState state, BlockView world, BlockPos pos, Entity entity) {
+        return INSIDE_COLLISION_SHAPE;
+    }
+
+    @Override
+    protected void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity, EntityCollisionHandler handler) {
+        handler.addEvent(CollisionEvent.LAVA_IGNITE);
+        handler.addPostCallback(CollisionEvent.LAVA_IGNITE, Entity::setOnFireFromLava);
     }
 
     @Override

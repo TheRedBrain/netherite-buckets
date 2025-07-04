@@ -13,8 +13,9 @@ import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.ItemActionResult;
+import net.minecraft.util.Util;
 import net.minecraft.util.function.BooleanBiFunction;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -25,8 +26,21 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 
 public abstract class AbstractNetheriteCauldronBlock extends Block {
-	private static final VoxelShape RAYCAST_SHAPE = createCuboidShape(2.0D, 4.0D, 2.0D, 14.0D, 16.0D, 14.0D);
-	protected static final VoxelShape OUTLINE_SHAPE = VoxelShapes.combineAndSimplify(VoxelShapes.fullCube(), VoxelShapes.union(createCuboidShape(0.0D, 0.0D, 4.0D, 16.0D, 3.0D, 12.0D), new VoxelShape[]{createCuboidShape(4.0D, 0.0D, 0.0D, 12.0D, 3.0D, 16.0D), createCuboidShape(2.0D, 0.0D, 2.0D, 14.0D, 3.0D, 14.0D), RAYCAST_SHAPE}), BooleanBiFunction.ONLY_FIRST);
+	private static final VoxelShape RAYCAST_SHAPE = Block.createColumnShape(12.0, 4.0, 16.0);
+	protected static final VoxelShape OUTLINE_SHAPE = Util.make(
+			() -> {
+				int i = 4;
+				int j = 3;
+				int k = 2;
+				return VoxelShapes.combineAndSimplify(
+						VoxelShapes.fullCube(),
+						VoxelShapes.union(
+								Block.createColumnShape(16.0, 8.0, 0.0, 3.0), Block.createColumnShape(8.0, 16.0, 0.0, 3.0), Block.createColumnShape(12.0, 0.0, 3.0), RAYCAST_SHAPE
+						),
+						BooleanBiFunction.ONLY_FIRST
+				);
+			}
+	);
 	protected final NetheriteCauldronBehaviour.NetheriteCauldronBehaviorMap behaviorMap;
 
 	@Override
@@ -41,12 +55,8 @@ public abstract class AbstractNetheriteCauldronBlock extends Block {
 		return 0.0;
 	}
 
-	protected boolean isEntityTouchingFluid(BlockState state, BlockPos pos, Entity entity) {
-		return entity.getY() < (double) pos.getY() + this.getFluidHeight(state) && entity.getBoundingBox().maxY > (double) pos.getY() + 0.25;
-	}
-
 	@Override
-	protected ItemActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+	protected ActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
 		NetheriteCauldronBehaviour netheriteCauldronBehavior = (NetheriteCauldronBehaviour) this.behaviorMap.map().get(stack.getItem());
 		return netheriteCauldronBehavior.interact(state, world, pos, player, hand, stack);
 	}

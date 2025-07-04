@@ -10,13 +10,12 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsage;
-import net.minecraft.item.Items;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.stat.Stats;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.ItemActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
@@ -35,13 +34,13 @@ public interface NetheriteCauldronBehaviour {
 
 	static NetheriteCauldronBehaviour.NetheriteCauldronBehaviorMap createMap(String name) {
 		Object2ObjectOpenHashMap<Item, NetheriteCauldronBehaviour> object2ObjectOpenHashMap = new Object2ObjectOpenHashMap<>();
-		object2ObjectOpenHashMap.defaultReturnValue((state, world, pos, player, hand, stack) -> ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION);
+		object2ObjectOpenHashMap.defaultReturnValue((state, world, pos, player, hand, stack) -> ActionResult.PASS_TO_DEFAULT_BLOCK_ACTION);
 		NetheriteCauldronBehaviour.NetheriteCauldronBehaviorMap cauldronBehaviorMap = new NetheriteCauldronBehaviour.NetheriteCauldronBehaviorMap(name, object2ObjectOpenHashMap);
 		BEHAVIOR_MAPS.put(name, cauldronBehaviorMap);
 		return cauldronBehaviorMap;
 	}
 
-	ItemActionResult interact(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, ItemStack stack);
+	ActionResult interact(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, ItemStack stack);
 
 	static void registerBehavior() {
 		Map<Item, NetheriteCauldronBehaviour> map = EMPTY_NETHERITE_CAULDRON_BEHAVIOR.map();
@@ -60,7 +59,7 @@ public interface NetheriteCauldronBehaviour {
 		behavior.put(ItemRegistry.NETHERITE_LAVA_BUCKET, FILL_WITH_LAVA);
 	}
 
-	static ItemActionResult emptyCauldron(
+	static ActionResult emptyCauldron(
 			BlockState state,
 			World world,
 			BlockPos pos,
@@ -72,7 +71,7 @@ public interface NetheriteCauldronBehaviour {
 			SoundEvent soundEvent
 	) {
 		if (!fullPredicate.test(state)) {
-			return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+			return ActionResult.PASS_TO_DEFAULT_BLOCK_ACTION;
 		} else {
 			if (!world.isClient) {
 				Item item = stack.getItem();
@@ -84,12 +83,12 @@ public interface NetheriteCauldronBehaviour {
 				world.emitGameEvent(null, GameEvent.FLUID_PICKUP, pos);
 			}
 
-			return ItemActionResult.success(world.isClient);
+			return ActionResult.SUCCESS;
 		}
 	}
 
 
-	static ItemActionResult fillCauldron(World world, BlockPos pos, PlayerEntity player, Hand hand, ItemStack stack, BlockState state, SoundEvent soundEvent) {
+	static ActionResult fillCauldron(World world, BlockPos pos, PlayerEntity player, Hand hand, ItemStack stack, BlockState state, SoundEvent soundEvent) {
 		if (!world.isClient) {
 			Item item = stack.getItem();
 			player.setStackInHand(hand, ItemUsage.exchangeStack(stack, player, new ItemStack(ItemRegistry.NETHERITE_BUCKET)));
@@ -100,7 +99,7 @@ public interface NetheriteCauldronBehaviour {
 			world.emitGameEvent(null, GameEvent.FLUID_PLACE, pos);
 		}
 
-		return ItemActionResult.success(world.isClient);
+		return ActionResult.SUCCESS;
 	}
 
 	public static record NetheriteCauldronBehaviorMap(String name, Map<Item, NetheriteCauldronBehaviour> map) {

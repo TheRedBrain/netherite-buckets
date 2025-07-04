@@ -6,6 +6,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.FluidDrainable;
 import net.minecraft.block.FluidFillable;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FlowableFluid;
 import net.minecraft.fluid.Fluid;
@@ -20,8 +21,8 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.stat.Stats;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -41,21 +42,21 @@ public class NetheriteBucketItem extends Item implements FluidModificationItem {
 	}
 
 	@Override
-	public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+	public ActionResult use(World world, PlayerEntity user, Hand hand) {
 		ItemStack itemStack = user.getStackInHand(hand);
 		BlockHitResult blockHitResult = raycast(
 				world, user, this.fluid == Fluids.EMPTY ? RaycastContext.FluidHandling.SOURCE_ONLY : RaycastContext.FluidHandling.NONE
 		);
 		if (blockHitResult.getType() == HitResult.Type.MISS) {
-			return TypedActionResult.pass(itemStack);
+			return ActionResult.PASS;
 		} else if (blockHitResult.getType() != HitResult.Type.BLOCK) {
-			return TypedActionResult.pass(itemStack);
+			return ActionResult.PASS;
 		} else {
 			BlockPos blockPos = blockHitResult.getBlockPos();
 			Direction direction = blockHitResult.getSide();
 			BlockPos blockPos2 = blockPos.offset(direction);
-			if (!world.canPlayerModifyAt(user, blockPos) || !user.canPlaceOn(blockPos2, direction, itemStack)) {
-				return TypedActionResult.fail(itemStack);
+			if (!world.canEntityModifyAt(user, blockPos) || !user.canPlaceOn(blockPos2, direction, itemStack)) {
+				return ActionResult.FAIL;
 			} else if (this.fluid == Fluids.EMPTY) {
 				BlockState blockState = world.getBlockState(blockPos);
 				if (blockState.getBlock() instanceof FluidDrainable fluidDrainable && blockState.getFluidState().getFluid().matchesType(Fluids.LAVA)) {
@@ -69,11 +70,11 @@ public class NetheriteBucketItem extends Item implements FluidModificationItem {
 							Criteria.FILLED_BUCKET.trigger((ServerPlayerEntity) user, itemStack2);
 						}
 
-						return TypedActionResult.success(itemStack3, world.isClient());
+						return ActionResult.SUCCESS.withNewHandStack(itemStack3);
 					}
 				}
 
-				return TypedActionResult.fail(itemStack);
+				return ActionResult.FAIL;
 			} else {
 				BlockState blockState = world.getBlockState(blockPos);
 				BlockPos blockPos3 = blockState.getBlock() instanceof FluidFillable && this.fluid == Fluids.WATER ? blockPos : blockPos2;
@@ -85,9 +86,9 @@ public class NetheriteBucketItem extends Item implements FluidModificationItem {
 
 					user.incrementStat(Stats.USED.getOrCreateStat(this));
 					ItemStack itemStack2 = ItemUsage.exchangeStack(itemStack, user, getEmptiedStack(itemStack, user));
-					return TypedActionResult.success(itemStack2, world.isClient());
+					return ActionResult.SUCCESS.withNewHandStack(itemStack2);
 				} else {
-					return TypedActionResult.fail(itemStack);
+					return ActionResult.FAIL;
 				}
 			}
 		}
@@ -98,35 +99,47 @@ public class NetheriteBucketItem extends Item implements FluidModificationItem {
 	}
 
 	@Override
-	public boolean placeFluid(@Nullable PlayerEntity player, World world, BlockPos pos, @Nullable BlockHitResult hitResult) {
+	public void onEmptied(@Nullable LivingEntity user, World world, ItemStack stack, BlockPos pos) {
+	}
+
+	@Override
+	public boolean placeFluid(@Nullable LivingEntity user, World world, BlockPos pos, @Nullable BlockHitResult hitResult) {
 		if (!(this.fluid instanceof FlowableFluid flowableFluid)) {
 			return false;
 		} else {
-			Block block;
-			boolean bl;
-			BlockState blockState;
-			boolean var10000;
-			label82:
-			{
-				blockState = world.getBlockState(pos);
-				block = blockState.getBlock();
-				bl = blockState.canBucketPlace(this.fluid);
-				label70:
-				if (!blockState.isAir() && !bl) {
-					if (block instanceof FluidFillable fluidFillable && fluidFillable.canFillWithFluid(player, world, pos, blockState, this.fluid)) {
-						break label70;
-					}
-
-					var10000 = false;
-					break label82;
-				}
-
-				var10000 = true;
-			}
-
-			boolean bl2 = var10000;
+			BlockState blockState = world.getBlockState(pos);
+			Block block = blockState.getBlock();
+			boolean bl = blockState.canBucketPlace(this.fluid);
+			boolean bl2 = blockState.isAir()
+					|| bl
+					|| block instanceof FluidFillable fluidFillable && fluidFillable.canFillWithFluid(user, world, pos, blockState, this.fluid);
 			if (!bl2) {
-				return hitResult != null && this.placeFluid(player, world, hitResult.getBlockPos().offset(hitResult.getSide()), null);
+				return hitResult != null && this.placeFluid(user, world, hitResult.getBlockPos().offset(hitResult.getSide()), null);
+//			Block block;
+//			boolean bl;
+//			BlockState blockState;
+//			boolean var10000;
+//			label82:
+//			{
+//				blockState = world.getBlockState(pos);
+//				block = blockState.getBlock();
+//				bl = blockState.canBucketPlace(this.fluid);
+//				label70:
+//				if (!blockState.isAir() && !bl) {
+//					if (block instanceof FluidFillable fluidFillable && fluidFillable.canFillWithFluid(player, world, pos, blockState, this.fluid)) {
+//						break label70;
+//					}
+//
+//					var10000 = false;
+//					break label82;
+//				}
+//
+//				var10000 = true;
+//			}
+//
+//			boolean bl2 = var10000;
+//			if (!bl2) {
+//				return hitResult != null && this.placeFluid(player, world, hitResult.getBlockPos().offset(hitResult.getSide()), null);
 //			} else if (world.getDimension().ultrawarm() && this.fluid.isIn(FluidTags.WATER)) {
 //				int i = pos.getX();
 //				int j = pos.getY();
@@ -141,11 +154,6 @@ public class NetheriteBucketItem extends Item implements FluidModificationItem {
 //
 //				return true;
 			} else {
-//				if (block instanceof FluidFillable fluidFillable && this.fluid == Fluids.WATER) {
-//					fluidFillable.tryFillWithFluid(world, pos, blockState, flowableFluid.getStill(false));
-//					this.playEmptyingSound(player, world, pos);
-//					return true;
-//				}
 
 				if (!world.isClient && bl && !blockState.isLiquid()) {
 					world.breakBlock(pos, true);
@@ -154,16 +162,16 @@ public class NetheriteBucketItem extends Item implements FluidModificationItem {
 				if (!world.setBlockState(pos, this.fluid.getDefaultState().getBlockState(), Block.NOTIFY_ALL_AND_REDRAW) && !blockState.getFluidState().isStill()) {
 					return false;
 				} else {
-					this.playEmptyingSound(player, world, pos);
+					this.playEmptyingSound(user, world, pos);
 					return true;
 				}
 			}
 		}
 	}
 
-	protected void playEmptyingSound(@Nullable PlayerEntity player, WorldAccess world, BlockPos pos) {
+	protected void playEmptyingSound(@Nullable LivingEntity user, WorldAccess world, BlockPos pos) {
 		SoundEvent soundEvent = this.fluid.isIn(FluidTags.LAVA) ? SoundEvents.ITEM_BUCKET_EMPTY_LAVA : SoundEvents.ITEM_BUCKET_EMPTY;
-		world.playSound(player, pos, soundEvent, SoundCategory.BLOCKS, 1.0F, 1.0F);
-		world.emitGameEvent(player, GameEvent.FLUID_PLACE, pos);
+		world.playSound(user, pos, soundEvent, SoundCategory.BLOCKS, 1.0F, 1.0F);
+		world.emitGameEvent(user, GameEvent.FLUID_PLACE, pos);
 	}
 }

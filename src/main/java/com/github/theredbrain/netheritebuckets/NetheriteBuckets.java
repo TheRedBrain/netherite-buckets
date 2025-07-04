@@ -3,6 +3,7 @@ package com.github.theredbrain.netheritebuckets;
 import com.github.theredbrain.netheritebuckets.registry.BlockRegistry;
 import com.github.theredbrain.netheritebuckets.registry.ItemRegistry;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.registry.FuelRegistryEvents;
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +15,11 @@ public class NetheriteBuckets implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		LOGGER.info("Turning netherite into buckets!");
-		BlockRegistry.init();
 		ItemRegistry.init();
+		BlockRegistry.init();
+		FuelRegistryEvents.BUILD.register((builder, context) -> {
+			builder.add(ItemRegistry.NETHERITE_LAVA_BUCKET, 20000);
+		});
 	}
 
 	public static Identifier identifier(String path) {
