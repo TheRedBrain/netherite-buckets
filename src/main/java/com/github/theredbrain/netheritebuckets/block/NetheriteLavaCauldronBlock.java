@@ -9,6 +9,7 @@ import net.minecraft.entity.CollisionEvent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityCollisionHandler;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
@@ -44,13 +45,14 @@ public class NetheriteLavaCauldronBlock extends AbstractNetheriteCauldronBlock {
     }
 
     @Override
-    protected void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity, EntityCollisionHandler handler) {
+    protected void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity, EntityCollisionHandler handler, boolean bl) {
+        handler.addEvent(CollisionEvent.CLEAR_FREEZE);
         handler.addEvent(CollisionEvent.LAVA_IGNITE);
         handler.addPostCallback(CollisionEvent.LAVA_IGNITE, Entity::setOnFireFromLava);
     }
 
     @Override
-    protected int getComparatorOutput(BlockState state, World world, BlockPos pos) {
+    protected int getComparatorOutput(BlockState state, World world, BlockPos pos, Direction direction) {
         return 3;
     }
 }

@@ -66,7 +66,7 @@ public class NetheriteBucketItem extends Item implements FluidModificationItem {
 						fluidDrainable.getBucketFillSound().ifPresent(sound -> user.playSound(sound, 1.0F, 1.0F));
 						world.emitGameEvent(user, GameEvent.FLUID_PICKUP, blockPos);
 						ItemStack itemStack3 = ItemUsage.exchangeStack(itemStack, user, itemStack2);
-						if (!world.isClient) {
+						if (!world.isClient()) {
 							Criteria.FILLED_BUCKET.trigger((ServerPlayerEntity) user, itemStack2);
 						}
 
@@ -155,7 +155,7 @@ public class NetheriteBucketItem extends Item implements FluidModificationItem {
 //				return true;
 			} else {
 
-				if (!world.isClient && bl && !blockState.isLiquid()) {
+				if (!world.isClient() && bl && !blockState.isLiquid()) {
 					world.breakBlock(pos, true);
 				}
 

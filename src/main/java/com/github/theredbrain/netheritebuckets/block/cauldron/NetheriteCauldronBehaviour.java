@@ -73,7 +73,7 @@ public interface NetheriteCauldronBehaviour {
 		if (!fullPredicate.test(state)) {
 			return ActionResult.PASS_TO_DEFAULT_BLOCK_ACTION;
 		} else {
-			if (!world.isClient) {
+			if (!world.isClient()) {
 				Item item = stack.getItem();
 				player.setStackInHand(hand, ItemUsage.exchangeStack(stack, player, output));
 				player.incrementStat(Stats.USE_CAULDRON); // TODO custom stats
@@ -89,7 +89,7 @@ public interface NetheriteCauldronBehaviour {
 
 
 	static ActionResult fillCauldron(World world, BlockPos pos, PlayerEntity player, Hand hand, ItemStack stack, BlockState state, SoundEvent soundEvent) {
-		if (!world.isClient) {
+		if (!world.isClient()) {
 			Item item = stack.getItem();
 			player.setStackInHand(hand, ItemUsage.exchangeStack(stack, player, new ItemStack(ItemRegistry.NETHERITE_BUCKET)));
 			player.incrementStat(Stats.FILL_CAULDRON); // TODO custom stats
