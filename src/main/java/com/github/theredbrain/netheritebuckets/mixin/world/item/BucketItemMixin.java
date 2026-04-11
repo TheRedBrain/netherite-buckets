@@ -1,4 +1,4 @@
-package com.github.theredbrain.netheritebuckets.mixin.item;
+package com.github.theredbrain.netheritebuckets.mixin.world.item;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Constant;
 public class BucketItemMixin {
 
 	@WrapOperation(method = "use", constant = @Constant(classValue = BucketPickup.class, ordinal = 0))
-	public boolean netheritebuckets$wrap_use(Object object, Operation<Boolean> original, @Local BlockState blockState) {
+	public boolean netheritebuckets$wrap_use(Object object, Operation<Boolean> original, @Local(name = "blockState") BlockState blockState) {
 		return original.call(object) && !blockState.getFluidState().getType().isSame(Fluids.LAVA);
 	}
 }

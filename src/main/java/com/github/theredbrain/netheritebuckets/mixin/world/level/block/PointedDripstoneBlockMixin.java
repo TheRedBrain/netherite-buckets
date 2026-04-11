@@ -1,6 +1,6 @@
-package com.github.theredbrain.netheritebuckets.mixin.block;
+package com.github.theredbrain.netheritebuckets.mixin.world.level.block;
 
-import com.github.theredbrain.netheritebuckets.block.AbstractNetheriteCauldronBlock;
+import com.github.theredbrain.netheritebuckets.world.level.block.AbstractNetheriteCauldronBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.AbstractCauldronBlock;
 import net.minecraft.world.level.block.PointedDripstoneBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -34,13 +34,13 @@ public abstract class PointedDripstoneBlockMixin {
 
 	/**
 	 * @author TheRedBrain
-	 * @reason WPI
+	 * @reason WIP
 	 */
 	@Overwrite
 	@Nullable
 	private static BlockPos findFillableCauldronBelowStalactiteTip(Level level, BlockPos blockPos, Fluid fluid) {
 		Predicate<BlockState> predicate = (state) -> {
-			return ((state.getBlock() instanceof AbstractCauldronBlock && ((AbstractCauldronBlockInvoker) state.getBlock()).canReceiveStalactiteDrip(fluid)) || (state.getBlock() instanceof AbstractNetheriteCauldronBlock && ((AbstractNetheriteCauldronBlock) state.getBlock()).canBeFilledByDripstone(fluid)));
+			return ((state.getBlock() instanceof AbstractCauldronBlock && ((AbstractCauldronBlockInvoker) state.getBlock()).canReceiveStalactiteDrip(fluid)) || (state.getBlock() instanceof AbstractNetheriteCauldronBlock && ((AbstractNetheriteCauldronBlock) state.getBlock()).canReceiveStalactiteDrip(fluid)));
 		};
 		BiPredicate<BlockPos, BlockState> biPredicate = (blockPosx, blockState) -> canDripThrough(level, blockPosx, blockState);
 		return (BlockPos) findBlockVertical(level, blockPos, Direction.DOWN.getAxisDirection(), biPredicate, predicate, 11).orElse(null);

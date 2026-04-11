@@ -1,4 +1,4 @@
-package com.github.theredbrain.netheritebuckets.mixin.block;
+package com.github.theredbrain.netheritebuckets.mixin.world.level.block;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.world.level.block.CauldronBlock;

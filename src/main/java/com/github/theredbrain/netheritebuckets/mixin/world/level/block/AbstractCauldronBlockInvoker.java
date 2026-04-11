@@ -1,4 +1,4 @@
-package com.github.theredbrain.netheritebuckets.mixin.block;
+package com.github.theredbrain.netheritebuckets.mixin.world.level.block;
 
 import net.minecraft.world.level.block.AbstractCauldronBlock;
 import net.minecraft.world.level.material.Fluid;

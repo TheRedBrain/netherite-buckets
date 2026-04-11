@@ -1,4 +1,4 @@
-package com.github.theredbrain.netheritebuckets.mixin.block.dispenser;
+package com.github.theredbrain.netheritebuckets.mixin.core.dispenser;
 
 import com.github.theredbrain.netheritebuckets.registry.ItemRegistry;
 import net.minecraft.core.BlockPos;

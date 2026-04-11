@@ -1,4 +1,4 @@
-package com.github.theredbrain.netheritebuckets.mixin.fluid;
+package com.github.theredbrain.netheritebuckets.mixin.world.level.material;
 
 import com.github.theredbrain.netheritebuckets.registry.ItemRegistry;
 import net.minecraft.world.item.Item;

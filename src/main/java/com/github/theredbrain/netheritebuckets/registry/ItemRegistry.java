@@ -1,7 +1,7 @@
 package com.github.theredbrain.netheritebuckets.registry;
 
 import com.github.theredbrain.netheritebuckets.NetheriteBuckets;
-import com.github.theredbrain.netheritebuckets.item.NetheriteBucketItem;
+import com.github.theredbrain.netheritebuckets.world.item.NetheriteBucketItem;
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
