@@ -1,15 +1,15 @@
 package com.github.theredbrain.netheritebuckets.mixin.block;
 
 import com.github.theredbrain.netheritebuckets.block.AbstractNetheriteCauldronBlock;
-import net.minecraft.block.AbstractCauldronBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.PointedDripstoneBlock;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldAccess;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.AbstractCauldronBlock;
+import net.minecraft.world.level.block.PointedDripstoneBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -20,15 +20,15 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 @Mixin(PointedDripstoneBlock.class)
-public class PointedDripstoneBlockMixin {
+public abstract class PointedDripstoneBlockMixin {
 
 	@Shadow
-	private static Optional<BlockPos> searchInDirection(WorldAccess world, BlockPos pos, Direction.AxisDirection direction, BiPredicate<BlockPos, BlockState> continuePredicate, Predicate<BlockState> stopPredicate, int range) {
+	private static boolean canDripThrough(BlockGetter blockGetter, BlockPos blockPos, BlockState blockState) {
 		throw new AssertionError();
 	}
 
 	@Shadow
-	private static boolean canDripThrough(BlockView world, BlockPos pos, BlockState state) {
+	private static Optional<BlockPos> findBlockVertical(LevelAccessor levelAccessor, BlockPos blockPos, Direction.AxisDirection axisDirection, BiPredicate<BlockPos, BlockState> biPredicate, Predicate<BlockState> predicate, int i) {
 		throw new AssertionError();
 	}
 
@@ -37,13 +37,14 @@ public class PointedDripstoneBlockMixin {
 	 * @reason WPI
 	 */
 	@Overwrite
-	private static @Nullable BlockPos getCauldronPos(World world, BlockPos pos, Fluid fluid) {
+	@Nullable
+	private static BlockPos findFillableCauldronBelowStalactiteTip(Level level, BlockPos blockPos, Fluid fluid) {
 		Predicate<BlockState> predicate = (state) -> {
-			return ((state.getBlock() instanceof AbstractCauldronBlock && ((AbstractCauldronBlockInvoker) state.getBlock()).canBeFilledByDripstone(fluid)) || (state.getBlock() instanceof AbstractNetheriteCauldronBlock && ((AbstractNetheriteCauldronBlock) state.getBlock()).canBeFilledByDripstone(fluid)));
+			return ((state.getBlock() instanceof AbstractCauldronBlock && ((AbstractCauldronBlockInvoker) state.getBlock()).canReceiveStalactiteDrip(fluid)) || (state.getBlock() instanceof AbstractNetheriteCauldronBlock && ((AbstractNetheriteCauldronBlock) state.getBlock()).canBeFilledByDripstone(fluid)));
 		};
-		BiPredicate<BlockPos, BlockState> biPredicate = (posx, state) -> {
-			return canDripThrough(world, posx, state);
-		};
-		return (BlockPos) searchInDirection(world, pos, Direction.DOWN.getDirection(), biPredicate, predicate, 11).orElse(null);
+		BiPredicate<BlockPos, BlockState> biPredicate = (blockPosx, blockState) -> canDripThrough(level, blockPosx, blockState);
+		return (BlockPos) findBlockVertical(level, blockPos, Direction.DOWN.getAxisDirection(), biPredicate, predicate, 11).orElse(null);
 	}
+
+
 }

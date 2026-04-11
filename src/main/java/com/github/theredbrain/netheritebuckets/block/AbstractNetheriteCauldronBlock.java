@@ -2,51 +2,50 @@ package com.github.theredbrain.netheritebuckets.block;
 
 import com.github.theredbrain.netheritebuckets.block.cauldron.NetheriteCauldronBehaviour;
 import com.mojang.serialization.MapCodec;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.PointedDripstoneBlock;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ai.pathing.NavigationType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.Fluids;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Util;
-import net.minecraft.util.function.BooleanBiFunction;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.World;
+import net.minecraft.Util;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.PointedDripstoneBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.level.pathfinder.PathComputationType;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public abstract class AbstractNetheriteCauldronBlock extends Block {
-	private static final VoxelShape RAYCAST_SHAPE = Block.createColumnShape(12.0, 4.0, 16.0);
+	private static final VoxelShape RAYCAST_SHAPE = Block.column(12.0, 4.0, 16.0);
 	protected static final VoxelShape OUTLINE_SHAPE = Util.make(
 			() -> {
 				int i = 4;
 				int j = 3;
 				int k = 2;
-				return VoxelShapes.combineAndSimplify(
-						VoxelShapes.fullCube(),
-						VoxelShapes.union(
-								Block.createColumnShape(16.0, 8.0, 0.0, 3.0), Block.createColumnShape(8.0, 16.0, 0.0, 3.0), Block.createColumnShape(12.0, 0.0, 3.0), RAYCAST_SHAPE
+				return Shapes.join(
+						Shapes.block(),
+						Shapes.or(
+								Block.column(16.0, 8.0, 0.0, 3.0), Block.column(8.0, 16.0, 0.0, 3.0), Block.column(12.0, 0.0, 3.0), RAYCAST_SHAPE
 						),
-						BooleanBiFunction.ONLY_FIRST
+						BooleanOp.ONLY_FIRST
 				);
 			}
 	);
 	protected final NetheriteCauldronBehaviour.NetheriteCauldronBehaviorMap behaviorMap;
 
 	@Override
-	protected abstract MapCodec<? extends AbstractNetheriteCauldronBlock> getCodec();
+	protected abstract MapCodec<? extends AbstractNetheriteCauldronBlock> codec();
 
-	public AbstractNetheriteCauldronBlock(Settings settings, NetheriteCauldronBehaviour.NetheriteCauldronBehaviorMap behaviorMap) {
+	public AbstractNetheriteCauldronBlock(Properties settings, NetheriteCauldronBehaviour.NetheriteCauldronBehaviorMap behaviorMap) {
 		super(settings);
 		this.behaviorMap = behaviorMap;
 	}
@@ -56,28 +55,28 @@ public abstract class AbstractNetheriteCauldronBlock extends Block {
 	}
 
 	@Override
-	protected ActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+	protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
 		NetheriteCauldronBehaviour netheriteCauldronBehavior = (NetheriteCauldronBehaviour) this.behaviorMap.map().get(stack.getItem());
 		return netheriteCauldronBehavior.interact(state, world, pos, player, hand, stack);
 	}
 
 	@Override
-	protected VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+	protected VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
 		return OUTLINE_SHAPE;
 	}
 
 	@Override
-	protected VoxelShape getRaycastShape(BlockState state, BlockView world, BlockPos pos) {
+	protected VoxelShape getInteractionShape(BlockState state, BlockGetter world, BlockPos pos) {
 		return RAYCAST_SHAPE;
 	}
 
 	@Override
-	protected boolean hasComparatorOutput(BlockState state) {
+	protected boolean hasAnalogOutputSignal(BlockState state) {
 		return true;
 	}
 
 	@Override
-	protected boolean canPathfindThrough(BlockState state, NavigationType type) {
+	protected boolean isPathfindable(BlockState state, PathComputationType type) {
 		return false;
 	}
 
@@ -90,10 +89,10 @@ public abstract class AbstractNetheriteCauldronBlock extends Block {
 	public abstract boolean isFull(BlockState state);
 
 	@Override
-	protected void scheduledTick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
-		BlockPos blockPos = PointedDripstoneBlock.getDripPos(world, pos);
+	protected void tick(BlockState state, ServerLevel world, BlockPos pos, RandomSource random) {
+		BlockPos blockPos = PointedDripstoneBlock.findStalactiteTipAboveCauldron(world, pos);
 		if (blockPos != null) {
-			Fluid fluid = PointedDripstoneBlock.getDripFluid(world, blockPos);
+			Fluid fluid = PointedDripstoneBlock.getCauldronFillFluidType(world, blockPos);
 			if (fluid != Fluids.EMPTY && this.canBeFilledByDripstone(fluid)) {
 				this.fillFromDripstone(state, world, pos, fluid);
 			}
@@ -118,6 +117,6 @@ public abstract class AbstractNetheriteCauldronBlock extends Block {
 	 * @param fluid the fluid to fill the cauldron with
 	 * @param state the current cauldron state
 	 */
-	protected void fillFromDripstone(BlockState state, World world, BlockPos pos, Fluid fluid) {
+	protected void fillFromDripstone(BlockState state, Level world, BlockPos pos, Fluid fluid) {
 	}
 }

@@ -1,3 +1,7 @@
+## TODO
+
+- update to 26.1
+
 # 3.0.0
 
 - updated to Minecraft 1.21.10

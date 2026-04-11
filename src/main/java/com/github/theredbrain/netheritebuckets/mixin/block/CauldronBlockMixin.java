@@ -1,9 +1,9 @@
 package com.github.theredbrain.netheritebuckets.mixin.block;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import net.minecraft.block.CauldronBlock;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.Fluids;
+import net.minecraft.world.level.block.CauldronBlock;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -11,11 +11,11 @@ import org.spongepowered.asm.mixin.injection.At;
 public class CauldronBlockMixin {
 
 	@ModifyReturnValue(
-			method = "canBeFilledByDripstone",
+			method = "canReceiveStalactiteDrip",
 			at = @At("RETURN")
 	)
-	protected boolean netheritebuckets$canBeFilledByDripstone(boolean original, Fluid fluid) {
-		if (fluid.matchesType(Fluids.LAVA)) {
+	protected boolean netheritebuckets$canReceiveStalactiteDrip(boolean original, Fluid fluid) {
+		if (fluid.isSame(Fluids.LAVA)) {
 			return false;
 		}
 		return original;

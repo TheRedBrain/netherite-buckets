@@ -3,23 +3,23 @@ package com.github.theredbrain.netheritebuckets.block;
 import com.github.theredbrain.netheritebuckets.block.cauldron.NetheriteCauldronBehaviour;
 import com.github.theredbrain.netheritebuckets.registry.BlockRegistry;
 import com.mojang.serialization.MapCodec;
-import net.minecraft.block.BlockState;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.Fluids;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldEvents;
-import net.minecraft.world.event.GameEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.LevelEvent;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
 
 public class NetheriteCauldronBlock extends AbstractNetheriteCauldronBlock {
-    public static final MapCodec<NetheriteCauldronBlock> CODEC = createCodec(NetheriteCauldronBlock::new);
+    public static final MapCodec<NetheriteCauldronBlock> CODEC = simpleCodec(NetheriteCauldronBlock::new);
 
     @Override
-    public MapCodec<NetheriteCauldronBlock> getCodec() {
+    public MapCodec<NetheriteCauldronBlock> codec() {
         return CODEC;
     }
 
-    public NetheriteCauldronBlock(Settings settings) {
+    public NetheriteCauldronBlock(Properties settings) {
         super(settings, NetheriteCauldronBehaviour.EMPTY_NETHERITE_CAULDRON_BEHAVIOR);
     }
 
@@ -29,16 +29,16 @@ public class NetheriteCauldronBlock extends AbstractNetheriteCauldronBlock {
     }
 
     public boolean canBeFilledByDripstone(Fluid fluid) {
-        return fluid.matchesType(Fluids.LAVA);
+        return fluid.isSame(Fluids.LAVA);
     }
 
-    protected void fillFromDripstone(BlockState state, World world, BlockPos pos, Fluid fluid) {
+    protected void fillFromDripstone(BlockState state, Level world, BlockPos pos, Fluid fluid) {
         BlockState blockState;
          if (fluid == Fluids.LAVA) {
-            blockState = BlockRegistry.NETHERITE_LAVA_CAULDRON.getDefaultState();
-            world.setBlockState(pos, blockState);
-            world.emitGameEvent(GameEvent.BLOCK_CHANGE, pos, GameEvent.Emitter.of(blockState));
-            world.syncWorldEvent(WorldEvents.POINTED_DRIPSTONE_DRIPS_LAVA_INTO_CAULDRON, pos, 0);
+            blockState = BlockRegistry.NETHERITE_LAVA_CAULDRON.defaultBlockState();
+            world.setBlockAndUpdate(pos, blockState);
+            world.gameEvent(GameEvent.BLOCK_CHANGE, pos, GameEvent.Context.of(blockState));
+            world.levelEvent(LevelEvent.SOUND_DRIP_LAVA_INTO_CAULDRON, pos, 0);
         }
 
     }

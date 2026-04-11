@@ -1,120 +1,120 @@
 package com.github.theredbrain.netheritebuckets.item;
 
 import com.github.theredbrain.netheritebuckets.registry.ItemRegistry;
-import net.minecraft.advancement.criterion.Criteria;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.FluidDrainable;
-import net.minecraft.block.FluidFillable;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.fluid.FlowableFluid;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.Fluids;
-import net.minecraft.item.FluidModificationItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsage;
-import net.minecraft.registry.tag.FluidTags;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.stat.Stats;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.RaycastContext;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldAccess;
-import net.minecraft.world.event.GameEvent;
+import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.stats.Stats;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.DispensibleContainerItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemUtils;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.BucketPickup;
+import net.minecraft.world.level.block.LiquidBlockContainer;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.material.FlowingFluid;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import org.jetbrains.annotations.Nullable;
 
-public class NetheriteBucketItem extends Item implements FluidModificationItem {
+public class NetheriteBucketItem extends Item implements DispensibleContainerItem {
 	private final Fluid fluid;
 
-	public NetheriteBucketItem(Fluid fluid, Settings settings) {
+	public NetheriteBucketItem(Fluid fluid, Properties settings) {
 		super(settings);
 		this.fluid = fluid;
 	}
 
 	@Override
-	public ActionResult use(World world, PlayerEntity user, Hand hand) {
-		ItemStack itemStack = user.getStackInHand(hand);
-		BlockHitResult blockHitResult = raycast(
-				world, user, this.fluid == Fluids.EMPTY ? RaycastContext.FluidHandling.SOURCE_ONLY : RaycastContext.FluidHandling.NONE
+	public InteractionResult use(Level world, Player user, InteractionHand hand) {
+		ItemStack itemStack = user.getItemInHand(hand);
+		BlockHitResult blockHitResult = getPlayerPOVHitResult(
+				world, user, this.fluid == Fluids.EMPTY ? ClipContext.Fluid.SOURCE_ONLY : ClipContext.Fluid.NONE
 		);
 		if (blockHitResult.getType() == HitResult.Type.MISS) {
-			return ActionResult.PASS;
+			return InteractionResult.PASS;
 		} else if (blockHitResult.getType() != HitResult.Type.BLOCK) {
-			return ActionResult.PASS;
+			return InteractionResult.PASS;
 		} else {
 			BlockPos blockPos = blockHitResult.getBlockPos();
-			Direction direction = blockHitResult.getSide();
-			BlockPos blockPos2 = blockPos.offset(direction);
-			if (!world.canEntityModifyAt(user, blockPos) || !user.canPlaceOn(blockPos2, direction, itemStack)) {
-				return ActionResult.FAIL;
+			Direction direction = blockHitResult.getDirection();
+			BlockPos blockPos2 = blockPos.relative(direction);
+			if (!world.mayInteract(user, blockPos) || !user.mayUseItemAt(blockPos2, direction, itemStack)) {
+				return InteractionResult.FAIL;
 			} else if (this.fluid == Fluids.EMPTY) {
 				BlockState blockState = world.getBlockState(blockPos);
-				if (blockState.getBlock() instanceof FluidDrainable fluidDrainable && blockState.getFluidState().getFluid().matchesType(Fluids.LAVA)) {
-					ItemStack itemStack2 = fluidDrainable.tryDrainFluid(user, world, blockPos, blockState);
+				if (blockState.getBlock() instanceof BucketPickup fluidDrainable && blockState.getFluidState().getType().isSame(Fluids.LAVA)) {
+					ItemStack itemStack2 = fluidDrainable.pickupBlock(user, world, blockPos, blockState);
 					if (!itemStack2.isEmpty()) {
-						user.incrementStat(Stats.USED.getOrCreateStat(this));
-						fluidDrainable.getBucketFillSound().ifPresent(sound -> user.playSound(sound, 1.0F, 1.0F));
-						world.emitGameEvent(user, GameEvent.FLUID_PICKUP, blockPos);
-						ItemStack itemStack3 = ItemUsage.exchangeStack(itemStack, user, itemStack2);
-						if (!world.isClient()) {
-							Criteria.FILLED_BUCKET.trigger((ServerPlayerEntity) user, itemStack2);
+						user.awardStat(Stats.ITEM_USED.get(this));
+						fluidDrainable.getPickupSound().ifPresent(sound -> user.playSound(sound, 1.0F, 1.0F));
+						world.gameEvent(user, GameEvent.FLUID_PICKUP, blockPos);
+						ItemStack itemStack3 = ItemUtils.createFilledResult(itemStack, user, itemStack2);
+						if (!world.isClientSide()) {
+							CriteriaTriggers.FILLED_BUCKET.trigger((ServerPlayer) user, itemStack2);
 						}
 
-						return ActionResult.SUCCESS.withNewHandStack(itemStack3);
+						return InteractionResult.SUCCESS.heldItemTransformedTo(itemStack3);
 					}
 				}
 
-				return ActionResult.FAIL;
+				return InteractionResult.FAIL;
 			} else {
 				BlockState blockState = world.getBlockState(blockPos);
-				BlockPos blockPos3 = blockState.getBlock() instanceof FluidFillable && this.fluid == Fluids.WATER ? blockPos : blockPos2;
-				if (this.placeFluid(user, world, blockPos3, blockHitResult)) {
-					this.onEmptied(user, world, itemStack, blockPos3);
-					if (user instanceof ServerPlayerEntity) {
-						Criteria.PLACED_BLOCK.trigger((ServerPlayerEntity) user, blockPos3, itemStack);
+				BlockPos blockPos3 = blockState.getBlock() instanceof LiquidBlockContainer && this.fluid == Fluids.WATER ? blockPos : blockPos2;
+				if (this.emptyContents(user, world, blockPos3, blockHitResult)) {
+					this.checkExtraContent(user, world, itemStack, blockPos3);
+					if (user instanceof ServerPlayer) {
+						CriteriaTriggers.PLACED_BLOCK.trigger((ServerPlayer) user, blockPos3, itemStack);
 					}
 
-					user.incrementStat(Stats.USED.getOrCreateStat(this));
-					ItemStack itemStack2 = ItemUsage.exchangeStack(itemStack, user, getEmptiedStack(itemStack, user));
-					return ActionResult.SUCCESS.withNewHandStack(itemStack2);
+					user.awardStat(Stats.ITEM_USED.get(this));
+					ItemStack itemStack2 = ItemUtils.createFilledResult(itemStack, user, getEmptiedStack(itemStack, user));
+					return InteractionResult.SUCCESS.heldItemTransformedTo(itemStack2);
 				} else {
-					return ActionResult.FAIL;
+					return InteractionResult.FAIL;
 				}
 			}
 		}
 	}
 
-	public static ItemStack getEmptiedStack(ItemStack stack, PlayerEntity player) {
-		return !player.isInCreativeMode() ? new ItemStack(ItemRegistry.NETHERITE_BUCKET) : stack;
+	public static ItemStack getEmptiedStack(ItemStack stack, Player player) {
+		return !player.hasInfiniteMaterials() ? new ItemStack(ItemRegistry.NETHERITE_BUCKET) : stack;
 	}
 
 	@Override
-	public void onEmptied(@Nullable LivingEntity user, World world, ItemStack stack, BlockPos pos) {
+	public void checkExtraContent(@Nullable LivingEntity user, Level world, ItemStack stack, BlockPos pos) {
 	}
 
 	@Override
-	public boolean placeFluid(@Nullable LivingEntity user, World world, BlockPos pos, @Nullable BlockHitResult hitResult) {
-		if (!(this.fluid instanceof FlowableFluid flowableFluid)) {
+	public boolean emptyContents(@Nullable LivingEntity user, Level world, BlockPos pos, @Nullable BlockHitResult hitResult) {
+		if (!(this.fluid instanceof FlowingFluid flowableFluid)) {
 			return false;
 		} else {
 			BlockState blockState = world.getBlockState(pos);
 			Block block = blockState.getBlock();
-			boolean bl = blockState.canBucketPlace(this.fluid);
+			boolean bl = blockState.canBeReplaced(this.fluid);
 			boolean bl2 = blockState.isAir()
 					|| bl
-					|| block instanceof FluidFillable fluidFillable && fluidFillable.canFillWithFluid(user, world, pos, blockState, this.fluid);
+					|| block instanceof LiquidBlockContainer fluidFillable && fluidFillable.canPlaceLiquid(user, world, pos, blockState, this.fluid);
 			if (!bl2) {
-				return hitResult != null && this.placeFluid(user, world, hitResult.getBlockPos().offset(hitResult.getSide()), null);
+				return hitResult != null && this.emptyContents(user, world, hitResult.getBlockPos().relative(hitResult.getDirection()), null);
 //			Block block;
 //			boolean bl;
 //			BlockState blockState;
@@ -155,11 +155,11 @@ public class NetheriteBucketItem extends Item implements FluidModificationItem {
 //				return true;
 			} else {
 
-				if (!world.isClient() && bl && !blockState.isLiquid()) {
-					world.breakBlock(pos, true);
+				if (!world.isClientSide() && bl && !blockState.liquid()) {
+					world.destroyBlock(pos, true);
 				}
 
-				if (!world.setBlockState(pos, this.fluid.getDefaultState().getBlockState(), Block.NOTIFY_ALL_AND_REDRAW) && !blockState.getFluidState().isStill()) {
+				if (!world.setBlock(pos, this.fluid.defaultFluidState().createLegacyBlock(), Block.UPDATE_ALL_IMMEDIATE) && !blockState.getFluidState().isSource()) {
 					return false;
 				} else {
 					this.playEmptyingSound(user, world, pos);
@@ -169,9 +169,9 @@ public class NetheriteBucketItem extends Item implements FluidModificationItem {
 		}
 	}
 
-	protected void playEmptyingSound(@Nullable LivingEntity user, WorldAccess world, BlockPos pos) {
-		SoundEvent soundEvent = this.fluid.isIn(FluidTags.LAVA) ? SoundEvents.ITEM_BUCKET_EMPTY_LAVA : SoundEvents.ITEM_BUCKET_EMPTY;
-		world.playSound(user, pos, soundEvent, SoundCategory.BLOCKS, 1.0F, 1.0F);
-		world.emitGameEvent(user, GameEvent.FLUID_PLACE, pos);
+	protected void playEmptyingSound(@Nullable LivingEntity user, LevelAccessor world, BlockPos pos) {
+		SoundEvent soundEvent = this.fluid.is(FluidTags.LAVA) ? SoundEvents.BUCKET_EMPTY_LAVA : SoundEvents.BUCKET_EMPTY;
+		world.playSound(user, pos, soundEvent, SoundSource.BLOCKS, 1.0F, 1.0F);
+		world.gameEvent(user, GameEvent.FLUID_PLACE, pos);
 	}
 }

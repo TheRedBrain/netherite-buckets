@@ -7,7 +7,7 @@
 		"block.AbstractCauldronBlockInvoker",
 		"block.CauldronBlockMixin",
 		"block.PointedDripstoneBlockMixin",
-		"block.dispenser.DispenserBehaviorMixin",
+    "block.dispenser.DispenseItemBehaviorMixin",
 		"fluid.LavaFluidMixin",
 		"item.BucketItemMixin"
 	],

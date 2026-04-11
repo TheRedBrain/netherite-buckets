@@ -4,7 +4,7 @@ import com.github.theredbrain.netheritebuckets.registry.BlockRegistry;
 import com.github.theredbrain.netheritebuckets.registry.ItemRegistry;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.registry.FuelRegistryEvents;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +22,7 @@ public class NetheriteBuckets implements ModInitializer {
 		});
 	}
 
-	public static Identifier identifier(String path) {
-		return Identifier.of(MOD_ID, path);
+	public static ResourceLocation identifier(String path) {
+		return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
 	}
 }
