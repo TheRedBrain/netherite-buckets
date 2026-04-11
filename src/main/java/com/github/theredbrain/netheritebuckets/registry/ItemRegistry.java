@@ -14,8 +14,8 @@ import org.jetbrains.annotations.Nullable;
 
 public class ItemRegistry {
 
-	public static final Item NETHERITE_BUCKET = registerItem("netherite_bucket", new NetheriteBucketItem(Fluids.EMPTY, new Item.Settings().maxCount(16)), ItemGroups.TOOLS);
-	public static final Item NETHERITE_LAVA_BUCKET = registerItem("netherite_lava_bucket", new NetheriteBucketItem(Fluids.LAVA, new Item.Settings().recipeRemainder(NETHERITE_BUCKET).maxCount(1)), ItemGroups.TOOLS);
+	public static final Item NETHERITE_BUCKET = registerItem("netherite_bucket", new NetheriteBucketItem(Fluids.EMPTY, new Item.Settings().maxCount(16).fireproof()), ItemGroups.TOOLS);
+	public static final Item NETHERITE_LAVA_BUCKET = registerItem("netherite_lava_bucket", new NetheriteBucketItem(Fluids.LAVA, new Item.Settings().recipeRemainder(NETHERITE_BUCKET).maxCount(1).fireproof()), ItemGroups.TOOLS);
 
 	private static Item registerItem(String name, Item item, @Nullable RegistryKey<ItemGroup> itemGroup) {
 

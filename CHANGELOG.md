@@ -1,3 +1,10 @@
+# 1.1.1
+
+## Fixes
+
+- using "pick block" on a Netherite Lava Cauldron now puts a Netherite Cauldron in the players hand
+- Netherite Cauldron, Netherite (Lava) Bucket items are now fire-resistant
+
 # 1.1.0
 
 ## Additions
