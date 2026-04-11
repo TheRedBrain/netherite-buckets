@@ -1,3 +1,10 @@
+# 4.0.1
+
+## Fixes
+
+- using "pick block" on a Netherite Lava Cauldron now puts a Netherite Cauldron in the players hand
+- Netherite Cauldron, Netherite (Lava) Bucket items are now fire-resistant
+
 # 4.0.0
 
 - migrated to MojangMapping
